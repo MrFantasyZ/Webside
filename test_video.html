@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频测试页面</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        video { width: 100%; max-width: 600px; height: auto; }
+        .test-section { margin: 20px 0; border: 1px solid #ccc; padding: 15px; }
+    </style>
+</head>
+<body>
+    <h1>视频加载测试</h1>
+    
+    <div class="test-section">
+        <h3>测试1: 直接访问后端视频文件</h3>
+        <video controls poster="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400">
+            <source src="http://localhost:5001/video/cam1.mp4" type="video/mp4">
+            您的浏览器不支持视频播放。
+        </video>
+        <p>URL: http://localhost:5001/video/cam1.mp4</p>
+    </div>
+    
+    <div class="test-section">
+        <h3>测试2: 通过前端代理访问视频文件</h3>
+        <video controls poster="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400">
+            <source src="http://localhost:3002/video/cam1.mp4" type="video/mp4">
+            您的浏览器不支持视频播放。
+        </video>
+        <p>URL: http://localhost:3002/video/cam1.mp4</p>
+    </div>
+    
+    <div class="test-section">
+        <h3>测试3: 使用相对路径（React应用中的方式）</h3>
+        <video controls poster="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400">
+            <source src="/video/cam1.mp4" type="video/mp4">
+            您的浏览器不支持视频播放。
+        </video>
+        <p>URL: /video/cam1.mp4</p>
+    </div>
+
+    <script>
+        // 添加一些调试信息
+        document.addEventListener('DOMContentLoaded', function() {
+            const videos = document.querySelectorAll('video');
+            videos.forEach((video, index) => {
+                video.addEventListener('loadstart', () => {
+                    console.log(`视频 ${index + 1} 开始加载`);
+                });
+                video.addEventListener('loadeddata', () => {
+                    console.log(`视频 ${index + 1} 数据已加载`);
+                });
+                video.addEventListener('error', (e) => {
+                    console.error(`视频 ${index + 1} 加载错误:`, e);
+                });
+                video.addEventListener('canplay', () => {
+                    console.log(`视频 ${index + 1} 可以播放`);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

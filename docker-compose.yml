@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: ai-video-store-db
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=ai-video-store
+    networks:
+      - ai-video-network
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: ai-video-store-server
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/ai-video-store
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - JWT_EXPIRES_IN=7d
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=587
+      - EMAIL_USER=your-email@gmail.com
+      - EMAIL_PASS=your-app-password
+    volumes:
+      - ./server/uploads:/app/uploads
+      - ./video:/video
+    depends_on:
+      - mongodb
+    networks:
+      - ai-video-network
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: ai-video-store-client
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+    networks:
+      - ai-video-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  ai-video-network:
+    driver: bridge
