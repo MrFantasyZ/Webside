@@ -3,7 +3,25 @@
     "allow": [
       "Bash(powershell:*)",
       "Bash(git reset:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)",
+      "Bash(where:*)",
+      "Bash(\"C:\\\\Users\\\\robot\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\" -m pip install pyzipper)",
+      "Bash(\"C:\\\\ProgramData\\\\anaconda3\\\\python.exe\" -m pip install pyzipper)",
+      "Bash(\"C:\\\\ProgramData\\\\anaconda3\\\\python.exe\" compress_v2.py)",
+      "Bash(set PYTHONIOENCODING=utf-8:*)",
+      "Bash(\"C:\\\\ProgramData\\\\anaconda3\\\\python.exe\" compress_v2_en.py)",
+      "Bash(for i in {1..6})",
+      "Bash(do ls -lh \"C:\\\\Guanhua_Zhu\\\\Business Empire Plan\\\\guozuyin\\\\test_video$i\\\\V2.zip\")",
+      "Bash(done)",
+      "Bash(ls:*)",
+      "Bash(ffmpeg:*)",
+      "Bash(\"C:\\\\ProgramData\\\\anaconda3\\\\python.exe\" extract_frames.py)",
+      "Bash(git remote:*)",
+      "Bash(git remote add:*)"
     ]
   }
 }

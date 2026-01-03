@@ -100,3 +100,14 @@ Thumbs.db
 
 # TypeScript cache
 *.tsbuildinfo
+
+# Video files and test data
+video/
+test_video/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wmv
+*.flv
+*.webm
