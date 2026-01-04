@@ -9,6 +9,7 @@
     "start": "node dist/index.js",
     "init-db": "node dist/scripts/initDatabase.js",
     "init-db-30": "node dist/scripts/initDatabase30Videos.js",
+    "init-test-videos": "node dist/scripts/initTestVideos.js",
     "create-superadmin": "node dist/scripts/createSuperAdmin.js",
     "init-categories": "node dist/scripts/initCategories.js",
     "upload-videos": "node dist/scripts/uploadVideoFiles.js",

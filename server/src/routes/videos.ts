@@ -3,6 +3,7 @@ import { query, validationResult } from 'express-validator';
 import Video from '../models/Video';
 import Purchase from '../models/Purchase';
 import { protect, AuthRequest } from '../middleware/auth';
+import { transformVideosForVIP, transformVideoForVIP, getDownloadUrl } from '../utils/vipContent';
 
 const router = express.Router();
 
@@ -72,8 +73,12 @@ router.get('/', [
 
     const totalPages = Math.ceil(total / limit);
 
+    // 根据 VIP 状态转换视频内容
+    const isVIP = (req as any).isVIP || false;
+    const transformedVideos = transformVideosForVIP(videos, isVIP);
+
     res.json({
-      videos,
+      videos: transformedVideos,
       pagination: {
         current: page,
         pages: totalPages,
@@ -140,12 +145,16 @@ router.get('/categories', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const video = await Video.findById(req.params.id);
-    
+
     if (!video) {
       return res.status(404).json({ message: '视频不存在' });
     }
 
-    res.json({ video });
+    // 根据 VIP 状态转换视频内容
+    const isVIP = (req as any).isVIP || false;
+    const transformedVideo = transformVideoForVIP(video, isVIP);
+
+    res.json({ video: transformedVideo });
 
   } catch (error: any) {
     console.error('Get video error:', error);
@@ -194,10 +203,15 @@ router.get('/:id/download', protect, async (req: AuthRequest, res: Response) => 
     purchase.isDownloaded = true;
     await purchase.save();
 
+    // 根据 VIP 状态返回不同的下载 URL
+    const isVIP = (req as any).isVIP || false;
+    const downloadUrl = getDownloadUrl(videoId, isVIP);
+
     res.json({
-      downloadUrl: video.videoUrl,
+      downloadUrl,
       remainingDownloads: purchase.maxDownloads - purchase.downloadCount,
-      expiresAt: purchase.downloadExpiresAt
+      expiresAt: purchase.downloadExpiresAt,
+      isVIP // 用于调试，生产环境可移除
     });
 
   } catch (error: any) {
@@ -294,7 +308,11 @@ router.get('/recommendations/:id', async (req: Request, res: Response) => {
       .limit(6)
       .sort({ createdAt: -1 });
 
-    res.json({ recommendations });
+    // 根据 VIP 状态转换视频内容
+    const isVIP = (req as any).isVIP || false;
+    const transformedRecommendations = transformVideosForVIP(recommendations, isVIP);
+
+    res.json({ recommendations: transformedRecommendations });
 
   } catch (error: any) {
     console.error('Get recommendations error:', error);

@@ -15,6 +15,7 @@ import categoriesRoutes from './routes/categories';
 import adminRoutes from './routes/admin';
 import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
+import { vipAuthMiddleware } from './middleware/vipAuth';
 
 dotenv.config();
 
@@ -70,13 +71,18 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// VIP 认证中间件 - 检查所有请求的 VIP Token
+app.use(vipAuthMiddleware);
+
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/video', express.static(path.join(__dirname, '../../video')));
+app.use('/test_video', express.static(path.join(__dirname, '../../test_video')));
 
 // 添加调试日志
 console.log('Static file paths:');
 console.log('Uploads path:', path.join(__dirname, '../uploads'));
 console.log('Video path:', path.join(__dirname, '../../video'));
+console.log('Test video path:', path.join(__dirname, '../../test_video'));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/videos', videoRoutes);
