@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>奇幻世界 VIP</title>
+  <style>
+    body {
+      width: 320px;
+      padding: 20px;
+      font-family: 'Microsoft YaHei', Arial, sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    }
+
+    h1 {
+      margin: 0 0 20px 0;
+      font-size: 24px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .status {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .status-active {
+      background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+    }
+
+    .info-item {
+      margin: 12px 0;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .info-label {
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+
+    .features {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+      font-size: 13px;
+    }
+
+    .feature-item::before {
+      content: '✓';
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      text-align: center;
+      line-height: 20px;
+      margin-right: 10px;
+      font-weight: bold;
+    }
+
+    .refresh-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 16px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .refresh-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .footer {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 11px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎬 奇幻世界 VIP</h1>
+
+    <div class="status">
+      <div class="status-badge status-active" id="statusBadge">
+        ✓ VIP 已激活
+      </div>
+    </div>
+
+    <div class="info-item">
+      <div class="info-label">会员 ID</div>
+      <div class="info-value" id="userId">加载中...</div>
+    </div>
+
+    <div class="info-item">
+      <div class="info-label">有效期至</div>
+      <div class="info-value" id="expiresAt">加载中...</div>
+    </div>
+
+    <div class="features">
+      <div class="feature-item">高清封面图</div>
+      <div class="feature-item">专属内封面</div>
+      <div class="feature-item">高清加长版视频</div>
+      <div class="feature-item">优先下载速度</div>
+    </div>
+
+    <button class="refresh-btn" id="refreshBtn">刷新 Token</button>
+
+    <div class="footer">
+      奇幻世界 VIP v1.0.0
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

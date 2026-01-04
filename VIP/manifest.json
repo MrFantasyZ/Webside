@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "奇幻世界 VIP",
+  "version": "1.0.0",
+  "description": "奇幻世界高级会员插件 - 解锁高清视频和专属内容",
+  "permissions": [
+    "storage",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "http://qihuanshijie.xyz/*",
+    "https://qihuanshijie.xyz/*",
+    "http://www.qihuanshijie.xyz/*",
+    "https://www.qihuanshijie.xyz/*",
+    "http://176.97.71.149/*",
+    "http://localhost:5000/*",
+    "http://localhost:3000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
