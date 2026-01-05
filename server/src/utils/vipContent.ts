@@ -24,14 +24,17 @@ export function getVideoContent(videoId: string | number, isVIP: boolean): Video
   if (typeof videoId === 'number') {
     videoNumber = videoId;
   } else {
+    // 转换为字符串（处理 MongoDB ObjectId）
+    const videoIdStr = String(videoId);
+
     // 尝试从 ID 中提取数字（简化处理，实际应用中可能需要映射表）
     // 这里假设 videoId 的最后一位是视频编号 1-6
-    const match = videoId.match(/\d+$/);
+    const match = videoIdStr.match(/\d+$/);
     if (match) {
       videoNumber = parseInt(match[0]) % 6 || 6; // 1-6 循环
     } else {
       // 如果无法提取，使用哈希方式映射到 1-6
-      const hash = videoId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const hash = videoIdStr.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       videoNumber = (hash % 6) + 1;
     }
   }
