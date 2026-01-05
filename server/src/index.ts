@@ -62,8 +62,8 @@ const authLimiter = rateLimit({
 app.use('/api/auth/', authLimiter);
 
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://yourdomain.com'] 
+  origin: process.env.NODE_ENV === 'production'
+    ? ['http://qihuanshijie.xyz', 'https://qihuanshijie.xyz', 'http://www.qihuanshijie.xyz', 'https://www.qihuanshijie.xyz', 'http://176.97.71.149']
     : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3005', 'http://localhost:3010'],
   credentials: true
 }));
