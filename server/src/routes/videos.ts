@@ -171,25 +171,35 @@ router.get('/:id/download', protect, async (req: AuthRequest, res: Response) => 
     const videoId = req.params.id;
     const userId = req.user!._id;
 
-    // Check if user has purchased this video
-    const purchase = await Purchase.findOne({
-      userId,
-      videoId,
-      paymentStatus: 'completed'
-    });
+    // ⚠️ 测试模式：跳过付费验证（记得测试完成后恢复）
+    const TEST_MODE = true; // 设置为 false 以启用付费验证
 
-    if (!purchase) {
-      return res.status(403).json({ message: '您尚未购买此视频' });
-    }
+    if (!TEST_MODE) {
+      // Check if user has purchased this video
+      const purchase = await Purchase.findOne({
+        userId,
+        videoId,
+        paymentStatus: 'completed'
+      });
 
-    // Check if download hasn't expired
-    if (purchase.downloadExpiresAt < new Date()) {
-      return res.status(403).json({ message: '下载链接已过期' });
-    }
+      if (!purchase) {
+        return res.status(403).json({ message: '您尚未购买此视频' });
+      }
 
-    // Check download limit
-    if (purchase.downloadCount >= purchase.maxDownloads) {
-      return res.status(403).json({ message: '已达到最大下载次数' });
+      // Check if download hasn't expired
+      if (purchase.downloadExpiresAt < new Date()) {
+        return res.status(403).json({ message: '下载链接已过期' });
+      }
+
+      // Check download limit
+      if (purchase.downloadCount >= purchase.maxDownloads) {
+        return res.status(403).json({ message: '已达到最大下载次数' });
+      }
+
+      // Update download count
+      purchase.downloadCount += 1;
+      purchase.isDownloaded = true;
+      await purchase.save();
     }
 
     // Get video with download URL
@@ -198,20 +208,18 @@ router.get('/:id/download', protect, async (req: AuthRequest, res: Response) => 
       return res.status(404).json({ message: '视频不存在' });
     }
 
-    // Update download count
-    purchase.downloadCount += 1;
-    purchase.isDownloaded = true;
-    await purchase.save();
-
     // 根据 VIP 状态返回不同的下载 URL
     const isVIP = (req as any).isVIP || false;
-    const downloadUrl = getDownloadUrl(videoId, isVIP);
+    const downloadUrl = getDownloadUrl(video, isVIP);
+
+    console.log(`[Download] Video: ${videoId}, User: ${userId}, VIP: ${isVIP}, URL: ${downloadUrl}`);
 
     res.json({
       downloadUrl,
-      remainingDownloads: purchase.maxDownloads - purchase.downloadCount,
-      expiresAt: purchase.downloadExpiresAt,
-      isVIP // 用于调试，生产环境可移除
+      remainingDownloads: TEST_MODE ? 999 : 0, // 测试模式下显示 999
+      expiresAt: TEST_MODE ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) : new Date(), // 测试模式下1年有效期
+      isVIP, // 用于调试，生产环境可移除
+      testMode: TEST_MODE // 显示当前是否为测试模式
     });
 
   } catch (error: any) {

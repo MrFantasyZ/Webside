@@ -80,21 +80,22 @@ export function transformVideoForVIP(video: any, isVIP: boolean): any {
 
   // 基于数据库中的路径进行转换，而不是重新生成
   // 数据库中存储的是普通用户路径（AI_开头）
-  // VIP用户需要去掉 AI_ 前缀
   let thumbnailUrl = video.thumbnailUrl || '';
   let videoUrl = video.videoUrl || '';
 
   if (isVIP) {
-    // VIP 用户：移除 AI_ 前缀，使用高清版本
+    // VIP 用户：替换为 VIP 版本
+    // 外封面：AI_fengmian_out.png -> fengmian_out.png
     thumbnailUrl = thumbnailUrl.replace('/AI_fengmian_out.png', '/fengmian_out.png');
-    videoUrl = videoUrl.replace('/AI_video.mp4', '/V2.zip');
+    // 播放视频：AI_video.mp4 -> VIP_video.mp4
+    videoUrl = videoUrl.replace('/AI_video.mp4', '/VIP_video.mp4');
   }
 
   // 返回新对象，包含 VIP 状态对应的 URL
   return {
     ...video,
     thumbnailUrl,
-    videoUrl: isVIP ? videoUrl : video.videoUrl, // 只在VIP时替换videoUrl
+    videoUrl,
     _isVIP: isVIP // 用于调试，生产环境可以移除
   };
 }
@@ -113,11 +114,18 @@ export function transformVideosForVIP(videos: any[], isVIP: boolean): any[] {
 /**
  * 获取下载 URL
  *
- * @param videoId - 视频 ID 或编号
+ * @param video - 视频对象（包含 videoUrl 字段）
  * @param isVIP - 是否为 VIP 用户
  * @returns 下载 URL
  */
-export function getDownloadUrl(videoId: string | number, isVIP: boolean): string {
-  const content = getVideoContent(videoId, isVIP);
-  return content.videoUrl;
+export function getDownloadUrl(video: any, isVIP: boolean): string {
+  let videoUrl = video.videoUrl || '';
+
+  if (isVIP) {
+    // VIP 用户下载 V2.zip 压缩包
+    videoUrl = videoUrl.replace('/AI_video.mp4', '/V2.zip');
+  }
+  // 普通用户下载 AI_video.mp4（保持不变）
+
+  return videoUrl;
 }
