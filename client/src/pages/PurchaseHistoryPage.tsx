@@ -17,20 +17,23 @@ const PurchaseHistoryPage: React.FC = () => {
   const handleDownload = async (videoId: string, title: string) => {
     try {
       const { downloadUrl, remainingDownloads, expiresAt } = await videosAPI.getDownloadLink(videoId);
-      
+
+      // Extract file extension from downloadUrl
+      const fileExtension = downloadUrl.split('.').pop() || 'mp4';
+
       // Create a temporary link to download the file
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = `${title}.mp4`;
+      link.download = `${title}.${fileExtension}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast.success(`下载开始！剩余下载次数: ${remainingDownloads}`);
-      
+
       // Refresh the data to update download count
       // queryClient.invalidateQueries('purchaseHistory');
-      
+
     } catch (error: any) {
       toast.error(error.response?.data?.message || '下载失败');
     }
