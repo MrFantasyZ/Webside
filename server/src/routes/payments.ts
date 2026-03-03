@@ -5,11 +5,12 @@ import { verifyNotification } from '../services/gopayService';
 
 const router = express.Router();
 
-// GoPay 异步回调通知（GoPay 挂机软件检测到收款后调用此接口）
-// 注意：此接口不需要 JWT 认证，由 GoPay 服务器调用
-router.post('/notify', async (req: Request, res: Response) => {
+// GoPay 异步回调通知处理（支持 GET/POST）
+async function handleNotify(req: Request, res: Response) {
   try {
-    const params = req.body as Record<string, string>;
+    const params = (Object.keys(req.query).length > 0
+      ? req.query
+      : req.body) as Record<string, string>;
     console.log('GoPay notify received:', params);
 
     // 验证签名，防止伪造请求
@@ -18,7 +19,7 @@ router.post('/notify', async (req: Request, res: Response) => {
       return res.send('fail');
     }
 
-    const { out_trade_no, trade_no, trade_status, money } = params;
+    const { out_trade_no, trade_no, trade_status } = params;
 
     // 只处理支付成功的通知
     if (trade_status !== 'TRADE_SUCCESS') {
@@ -52,19 +53,20 @@ router.post('/notify', async (req: Request, res: Response) => {
 
     console.log(`GoPay notify: order ${out_trade_no} completed, ${purchases.length} purchases updated`);
 
-    // GoPay 要求返回 "success" 字符串表示已收到通知
     res.send('success');
 
   } catch (error) {
     console.error('GoPay notify error:', error);
     res.send('fail');
   }
-});
+}
+
+router.get('/notify', handleNotify);
+router.post('/notify', handleNotify);
 
 // GoPay 同步跳转通知（用户支付完成后页面跳转到此）
 router.get('/return', async (req: Request, res: Response) => {
   const { out_trade_no } = req.query as Record<string, string>;
-  // 跳转回前端支付结果页
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   res.redirect(`${frontendUrl}/payment/result?orderId=${out_trade_no}`);
 });
