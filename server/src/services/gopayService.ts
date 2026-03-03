@@ -11,7 +11,7 @@ export function calculateSign(params: Record<string, string>): string {
     .sort();
 
   const paramStr = sortedKeys.map(k => `${k}=${params[k]}`).join('&');
-  const signStr = `${paramStr}&key=${GOPAY_KEY}`;
+  const signStr = `${paramStr}${GOPAY_KEY}`;
   return crypto.createHash('md5').update(signStr).digest('hex');
 }
 
