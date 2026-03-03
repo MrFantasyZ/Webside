@@ -19,6 +19,9 @@ import { notFound } from './middleware/notFound';
 import { vipAuthMiddleware } from './middleware/vipAuth';
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
+console.log('[ENV] GOPAY_KEY:', process.env.GOPAY_KEY ? `loaded (length=${process.env.GOPAY_KEY.length})` : 'MISSING!');
+console.log('[ENV] PORT:', process.env.PORT || '(not set)');
+console.log('[ENV] .env path:', path.join(__dirname, '../.env'));
 
 const app = express();
 const PORT = process.env.PORT || 5000;
