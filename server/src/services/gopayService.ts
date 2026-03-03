@@ -1,17 +1,14 @@
 import crypto from 'crypto';
 
-const GOPAY_BASE_URL = process.env.GOPAY_API_URL || 'https://pay.mymzf.com';
-const GOPAY_PID = process.env.GOPAY_PID || '12545';
-const GOPAY_KEY = process.env.GOPAY_KEY || '';
-
 // MD5 签名计算（GoPay 标准签名方式）
 export function calculateSign(params: Record<string, string>): string {
+  const gopayKey = process.env.GOPAY_KEY || '';
   const sortedKeys = Object.keys(params)
     .filter(k => k !== 'sign' && k !== 'sign_type' && params[k] !== '')
     .sort();
 
   const paramStr = sortedKeys.map(k => `${k}=${params[k]}`).join('&');
-  const signStr = `${paramStr}${GOPAY_KEY}`;
+  const signStr = `${paramStr}${gopayKey}`;
   return crypto.createHash('md5').update(signStr).digest('hex');
 }
 
@@ -24,10 +21,12 @@ export function createPaymentUrl(params: {
   returnUrl: string;
   productName: string;
 }): string {
+  const gopayBaseUrl = process.env.GOPAY_API_URL || 'https://pay.mymzf.com';
+  const gopayPid = process.env.GOPAY_PID || '12545';
   const type = params.paymentMethod === 'alipay' ? 'alipay' : 'wxpay';
 
   const requestParams: Record<string, string> = {
-    pid: GOPAY_PID,
+    pid: gopayPid,
     type,
     out_trade_no: params.orderId,
     notify_url: params.notifyUrl,
@@ -42,7 +41,7 @@ export function createPaymentUrl(params: {
   requestParams.sign_type = 'MD5';
 
   const queryString = new URLSearchParams(requestParams).toString();
-  return `${GOPAY_BASE_URL}/xpay/epay/submit.php?${queryString}`;
+  return `${gopayBaseUrl}/xpay/epay/submit.php?${queryString}`;
 }
 
 // 验证 GoPay 回调通知的签名
