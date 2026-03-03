@@ -151,6 +151,11 @@ export const purchasesAPI = {
     const response = await api.get(`/purchases/${id}`);
     return response.data;
   },
+
+  checkPaymentStatus: async (orderId: string) => {
+    const response = await api.get(`/payments/status/${orderId}`);
+    return response.data;
+  },
 };
 
 // Categories API

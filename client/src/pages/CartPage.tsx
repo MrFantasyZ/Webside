@@ -13,6 +13,7 @@ const CartPage: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = React.useState(false);
   const [currentPaymentMethod, setCurrentPaymentMethod] = React.useState<'alipay' | 'wechat' | null>(null);
   const [currentOrderId, setCurrentOrderId] = React.useState<string>('');
+  const [currentPaymentUrl, setCurrentPaymentUrl] = React.useState<string>('');
 
   const handleRemoveItem = async (videoId: string) => {
     try {
@@ -37,9 +38,9 @@ const CartPage: React.FC = () => {
     try {
       const { paymentUrl, orderId } = await purchasesAPI.createOrder(paymentMethod);
       
-      // Show payment modal with QR code
       setCurrentPaymentMethod(paymentMethod);
       setCurrentOrderId(orderId);
+      setCurrentPaymentUrl(paymentUrl);
       setShowPaymentModal(true);
       toast.success('订单创建成功！');
       
@@ -54,6 +55,7 @@ const CartPage: React.FC = () => {
     setShowPaymentModal(false);
     setCurrentPaymentMethod(null);
     setCurrentOrderId('');
+    setCurrentPaymentUrl('');
   };
 
   if (isLoading) {
@@ -191,6 +193,7 @@ const CartPage: React.FC = () => {
         paymentMethod={currentPaymentMethod}
         amount={total}
         orderId={currentOrderId}
+        paymentUrl={currentPaymentUrl}
       />
     </div>
   );

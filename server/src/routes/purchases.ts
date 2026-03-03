@@ -4,6 +4,7 @@ import Purchase from '../models/Purchase';
 import Video from '../models/Video';
 import Cart from '../models/Cart';
 import { protect, AuthRequest } from '../middleware/auth';
+import { createPaymentUrl } from '../services/gopayService';
 
 const router = express.Router();
 
@@ -47,25 +48,34 @@ router.post('/create-order', protect, [
         sum + (item.videoId?.price || 0), 0
       );
 
-      // Create purchase records
-      const purchases = cart.items.map(item => ({
+      // 生成订单ID
+      const orderId = `ORDER_${Date.now()}_${userId}`;
+
+      // 创建购买记录（含 orderId）
+      const purchaseDocs = cart.items.map(item => ({
         userId,
         videoId: item.videoId._id,
+        orderId,
         paymentStatus: 'pending' as const,
         paymentMethod,
         amount: (item.videoId as any).price,
         purchaseTime: new Date(),
-        downloadExpiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) // 48 hours from now
+        downloadExpiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000)
       }));
 
-      const createdPurchases = await Purchase.insertMany(purchases);
+      const createdPurchases = await Purchase.insertMany(purchaseDocs);
 
-      // Generate order ID (simplified - in production use proper payment gateway)
-      const orderId = `ORDER_${Date.now()}_${userId}`;
-
-      // In a real implementation, you would integrate with Alipay/WeChat Pay APIs here
-      // For demo purposes, we'll simulate payment creation
-      const paymentUrl = generateMockPaymentUrl(orderId, totalAmount, paymentMethod);
+      // 生成 GoPay 支付链接
+      const serverUrl = process.env.SERVER_URL || 'https://qihuanshijie.xyz';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://qihuanshijie.xyz';
+      const paymentUrl = createPaymentUrl({
+        orderId,
+        amount: totalAmount,
+        paymentMethod,
+        notifyUrl: `${serverUrl}/api/payments/notify`,
+        returnUrl: `${frontendUrl}/payment/result?orderId=${orderId}`,
+        productName: '奇幻世界视频素材'
+      });
 
       res.json({
         message: '订单创建成功',

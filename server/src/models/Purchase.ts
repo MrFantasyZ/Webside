@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IPurchase extends Document {
   userId: mongoose.Types.ObjectId;
   videoId: mongoose.Types.ObjectId;
+  orderId?: string;
   purchaseTime: Date;
   downloadExpiresAt: Date;
   isDownloaded: boolean;
@@ -54,6 +55,10 @@ const PurchaseSchema: Schema = new Schema({
     type: String,
     enum: ['alipay', 'wechat', 'other'],
     required: true
+  },
+  orderId: {
+    type: String,
+    index: true
   },
   transactionId: {
     type: String,
