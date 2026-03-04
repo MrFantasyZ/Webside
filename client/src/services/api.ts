@@ -132,7 +132,7 @@ export const cartAPI = {
 
 // Purchases API
 export const purchasesAPI = {
-  createOrder: async (paymentMethod: 'alipay' | 'wechat') => {
+  createOrder: async (paymentMethod: 'alipay' | 'wechat' | 'qq') => {
     const response = await api.post('/purchases/create-order', { paymentMethod });
     return response.data;
   },

@@ -17,14 +17,14 @@ export function calculateSign(params: Record<string, string>): string {
 export function createPaymentUrl(params: {
   orderId: string;
   amount: number;
-  paymentMethod: 'alipay' | 'wechat';
+  paymentMethod: 'alipay' | 'wechat' | 'qq';
   notifyUrl: string;
   returnUrl: string;
   productName: string;
 }): string {
   const gopayBaseUrl = process.env.GOPAY_API_URL || 'https://pay.mymzf.com';
   const gopayPid = process.env.GOPAY_PID || '12545';
-  const type = params.paymentMethod === 'alipay' ? 'alipay' : 'wxpay';
+  const type = params.paymentMethod === 'alipay' ? 'alipay' : params.paymentMethod === 'qq' ? 'qqpay' : 'wxpay';
 
   const requestParams: Record<string, string> = {
     pid: gopayPid,

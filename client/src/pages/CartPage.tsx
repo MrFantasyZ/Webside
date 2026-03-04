@@ -11,7 +11,7 @@ const CartPage: React.FC = () => {
   const { items, total, count, removeFromCart, clearCart, isLoading } = useCart();
   const [isCreatingOrder, setIsCreatingOrder] = React.useState(false);
   const [showPaymentModal, setShowPaymentModal] = React.useState(false);
-  const [currentPaymentMethod, setCurrentPaymentMethod] = React.useState<'alipay' | 'wechat' | null>(null);
+  const [currentPaymentMethod, setCurrentPaymentMethod] = React.useState<'alipay' | 'wechat' | 'qq' | null>(null);
   const [currentOrderId, setCurrentOrderId] = React.useState<string>('');
   const [currentPaymentUrl, setCurrentPaymentUrl] = React.useState<string>('');
 
@@ -33,7 +33,7 @@ const CartPage: React.FC = () => {
     }
   };
 
-  const handleCheckout = async (paymentMethod: 'alipay' | 'wechat') => {
+  const handleCheckout = async (paymentMethod: 'alipay' | 'wechat' | 'qq') => {
     setIsCreatingOrder(true);
     try {
       const { paymentUrl, orderId } = await purchasesAPI.createOrder(paymentMethod);
@@ -177,6 +177,14 @@ const CartPage: React.FC = () => {
               className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isCreatingOrder ? '创建订单中...' : '微信支付'}
+            </button>
+
+            <button
+              onClick={() => handleCheckout('qq')}
+              disabled={isCreatingOrder}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCreatingOrder ? '创建订单中...' : 'QQ支付'}
             </button>
           </div>
 

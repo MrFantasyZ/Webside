@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  paymentMethod: 'alipay' | 'wechat' | null;
+  paymentMethod: 'alipay' | 'wechat' | 'qq' | null;
   amount: number;
   orderId?: string;
   paymentUrl?: string;
@@ -77,11 +77,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
   if (!isOpen || !paymentMethod) return null;
 
-  const isAlipay = paymentMethod === 'alipay';
-  const methodName = isAlipay ? '支付宝' : '微信';
-  const accentColor = isAlipay ? 'text-orange-600' : 'text-green-600';
-  const btnColor = isAlipay
+  const methodName = paymentMethod === 'alipay' ? '支付宝' : paymentMethod === 'qq' ? 'QQ' : '微信';
+  const accentColor = paymentMethod === 'alipay' ? 'text-orange-600' : paymentMethod === 'qq' ? 'text-blue-500' : 'text-green-600';
+  const btnColor = paymentMethod === 'alipay'
     ? 'bg-orange-600 hover:bg-orange-700'
+    : paymentMethod === 'qq'
+    ? 'bg-blue-500 hover:bg-blue-600'
     : 'bg-green-600 hover:bg-green-700';
 
   const minutes = Math.floor(secondsLeft / 60);
@@ -132,7 +133,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           ) : (
             // 等待支付
             <>
-              <div className={`${isAlipay ? 'bg-orange-50' : 'bg-green-50'} rounded-lg p-4 mb-5`}>
+              <div className={`${paymentMethod === 'alipay' ? 'bg-orange-50' : paymentMethod === 'qq' ? 'bg-blue-50' : 'bg-green-50'} rounded-lg p-4 mb-5`}>
                 <p className="text-sm text-gray-600 mb-1">订单金额</p>
                 <p className={`text-3xl font-bold ${accentColor}`}>¥{amount.toFixed(2)}</p>
                 {orderId && (

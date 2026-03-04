@@ -10,7 +10,7 @@ const router = express.Router();
 
 // Create order from cart
 router.post('/create-order', protect, [
-  body('paymentMethod').isIn(['alipay', 'wechat']).withMessage('Invalid payment method')
+  body('paymentMethod').isIn(['alipay', 'wechat', 'qq']).withMessage('Invalid payment method')
 ], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
