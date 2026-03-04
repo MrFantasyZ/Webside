@@ -10,7 +10,7 @@ export interface IPurchase extends Document {
   downloadCount: number;
   maxDownloads: number;
   paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
-  paymentMethod: 'alipay' | 'wechat' | 'other';
+  paymentMethod: 'alipay' | 'wechat' | 'qq' | 'other';
   transactionId?: string;
   amount: number;
 }
@@ -53,7 +53,7 @@ const PurchaseSchema: Schema = new Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['alipay', 'wechat', 'other'],
+    enum: ['alipay', 'wechat', 'qq', 'other'],
     required: true
   },
   orderId: {
