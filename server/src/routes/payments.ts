@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import Purchase from '../models/Purchase';
 import Cart from '../models/Cart';
-import { verifyNotification } from '../services/gopayService';
+import { verifyNotification, queryGopayOrderStatus } from '../services/gopayService';
 
 const router = express.Router();
 
@@ -71,7 +71,7 @@ router.get('/return', async (req: Request, res: Response) => {
   res.redirect(`${frontendUrl}/payment/result?orderId=${out_trade_no}`);
 });
 
-// 前端轮询接口：查询订单支付状态
+// 前端轮询接口：查询订单支付状态（含 GoPay 主动查询备用逻辑）
 router.get('/status/:orderId', async (req: Request, res: Response) => {
   try {
     const { orderId } = req.params;
@@ -85,11 +85,29 @@ router.get('/status/:orderId', async (req: Request, res: Response) => {
     const allCompleted = purchases.every(p => p.paymentStatus === 'completed');
     const anyFailed = purchases.some(p => p.paymentStatus === 'failed');
 
-    res.json({
-      orderId,
-      status: allCompleted ? 'completed' : anyFailed ? 'failed' : 'pending',
-      purchases: purchases.length
-    });
+    if (allCompleted) {
+      return res.json({ orderId, status: 'completed', purchases: purchases.length });
+    }
+
+    if (anyFailed) {
+      return res.json({ orderId, status: 'failed', purchases: purchases.length });
+    }
+
+    // 订单还是 pending：主动向 GoPay 查询是否已支付（notify_url 可能未被调用）
+    const gopayResult = await queryGopayOrderStatus(orderId);
+    if (gopayResult.paid) {
+      await Purchase.updateMany(
+        { orderId, paymentStatus: 'pending' },
+        { paymentStatus: 'completed', transactionId: gopayResult.tradeNo,
+          downloadExpiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) }
+      );
+      const userId = purchases[0].userId;
+      await Cart.findOneAndUpdate({ userId }, { items: [] });
+      console.log(`GoPay poll: order ${orderId} confirmed paid via API query`);
+      return res.json({ orderId, status: 'completed', purchases: purchases.length });
+    }
+
+    res.json({ orderId, status: 'pending', purchases: purchases.length });
 
   } catch (error) {
     console.error('Payment status check error:', error);

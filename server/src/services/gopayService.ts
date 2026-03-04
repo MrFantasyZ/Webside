@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import https from 'https';
 
 // MD5 签名计算（GoPay 标准签名方式）
 export function calculateSign(params: Record<string, string>): string {
@@ -50,4 +51,28 @@ export function verifyNotification(params: Record<string, string>): boolean {
   if (!sign) return false;
   const expectedSign = calculateSign(rest);
   return sign === expectedSign;
+}
+
+// 主动查询 GoPay 订单状态（用于 notify_url 回调失败时的备用方案）
+export function queryGopayOrderStatus(orderId: string): Promise<{ paid: boolean; tradeNo?: string }> {
+  const gopayBaseUrl = process.env.GOPAY_API_URL || 'https://pay.mymzf.com';
+  const gopayPid = process.env.GOPAY_PID || '12545';
+  const gopayKey = process.env.GOPAY_KEY || '';
+  const url = `${gopayBaseUrl}/xpay/epay/api.php?act=order&pid=${gopayPid}&key=${gopayKey}&out_trade_no=${encodeURIComponent(orderId)}`;
+
+  return new Promise((resolve) => {
+    https.get(url, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          // status=1 表示已支付
+          resolve({ paid: json.status === 1, tradeNo: json.trade_no });
+        } catch {
+          resolve({ paid: false });
+        }
+      });
+    }).on('error', () => resolve({ paid: false }));
+  });
 }
