@@ -62,7 +62,7 @@ const PurchaseHistoryPage: React.FC = () => {
     );
   }
 
-  const purchases = data?.purchases || [];
+  const purchases = (data?.purchases || []).filter((p: any) => p.paymentStatus === 'completed');
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
