@@ -9,8 +9,8 @@ const Footer: React.FC = () => {
           {/* Logo and description */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
-              <img src="/ai-logo.png" alt="AI素材网" className="w-8 h-8 rounded-lg object-cover" />
-              <span className="text-xl font-bold">AI素材网</span>
+              <img src="/webside_logo.png" alt="奇幻世界" className="w-8 h-8 rounded-lg object-cover" />
+              <span className="text-xl font-bold">奇幻世界</span>
             </div>
             <p className="text-gray-300 mb-4 max-w-md">
               提供高质量的AI视频素材，满足您的创意需求。专业的视频库，便捷的购买体验。
@@ -93,11 +93,11 @@ const Footer: React.FC = () => {
         <div className="mt-8 pt-8 border-t border-gray-700">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2024 AI素材网. 保留所有权利。
+              © 2024 奇幻世界. 保留所有权利。
             </p>
             <div className="mt-4 md:mt-0">
               <p className="text-gray-400 text-sm">
-                服务热线：400-123-4567
+                管理员 QQ：3456501297，微信：wxid_xievu4u7iwlm12
               </p>
             </div>
           </div>
