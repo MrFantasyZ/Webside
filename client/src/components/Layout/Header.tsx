@@ -32,8 +32,8 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <img src="/ai-logo.png" alt="AI素材网" className="w-8 h-8 rounded-lg object-cover" />
-            <span className="text-xl font-bold text-gray-900 dark:text-white">AI素材网</span>
+            <img src="/webside_logo.png" alt="奇幻世界" className="w-8 h-8 rounded-lg object-cover" />
+            <span className="text-xl font-bold text-gray-900 dark:text-white">奇幻世界</span>
           </Link>
 
           {/* Search Bar */}
