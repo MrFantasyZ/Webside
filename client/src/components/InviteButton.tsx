@@ -94,19 +94,20 @@ const InviteButton: React.FC = () => {
         </div>
       )}
 
-      <div className="flex flex-col items-end space-y-1">
-        {luckyCoins > 0 && (
-          <div className="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full shadow">
-            幸运币 {luckyCoins.toFixed(2)}
+      <div className="flex flex-col items-end space-y-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 px-3 py-2 flex items-center space-x-3">
+          <div className="text-center">
+            <div className="text-xs text-gray-400 dark:text-gray-500 leading-none mb-0.5">幸运币</div>
+            <div className="text-sm font-bold text-yellow-500 leading-none">{luckyCoins.toFixed(2)}</div>
           </div>
-        )}
-        <button
-          onClick={handleOpen}
-          className="bg-orange-500 hover:bg-orange-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors text-xs font-bold leading-tight text-center"
-          title="邀请好友"
-        >
-          邀请
-        </button>
+          <div className="w-px h-6 bg-gray-200 dark:bg-gray-600" />
+          <button
+            onClick={handleOpen}
+            className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-3 py-1.5 text-xs font-bold transition-colors shadow-sm"
+          >
+            邀请好友
+          </button>
+        </div>
       </div>
     </div>
   );
