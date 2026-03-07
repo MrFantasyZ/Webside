@@ -55,7 +55,7 @@ async function handleNotify(req: Request, res: Response) {
     // 发放邀请佣金（非免费劵购买）
     for (const p of purchases) {
       if (!p.usedFreeCoupon) {
-        await awardCommission(p.userId.toString(), p.videoId.toString(), p._id.toString());
+        await awardCommission(p.userId.toString(), p.videoId.toString(), (p._id as any).toString());
       }
     }
 
@@ -116,7 +116,7 @@ router.get('/status/:orderId', async (req: Request, res: Response) => {
       const updatedPurchases = await Purchase.find({ orderId });
       for (const p of updatedPurchases) {
         if (!p.usedFreeCoupon) {
-          await awardCommission(p.userId.toString(), p.videoId.toString(), p._id.toString());
+          await awardCommission(p.userId.toString(), p.videoId.toString(), (p._id as any).toString());
         }
       }
 

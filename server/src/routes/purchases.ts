@@ -93,7 +93,7 @@ router.post('/create-order', protect, [
       // 发放佣金（非免费劵订单才发放）
       if (!useFreeCoupon) {
         for (const p of createdPurchases) {
-          await awardCommission(userId.toString(), p.videoId.toString(), p._id.toString());
+          await awardCommission((userId as any).toString(), p.videoId.toString(), (p._id as any).toString());
         }
       }
 
