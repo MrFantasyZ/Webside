@@ -15,7 +15,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onClose, onBackToLogin 
   const [error, setError] = useState('');
   const [codeSent, setCodeSent] = useState(false);
 
-  const { login } = useAuth();
+  const { loginWithToken } = useAuth();
 
   // 验证手机号格式
   const validatePhone = (phone: string) => {
@@ -104,8 +104,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onClose, onBackToLogin 
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('token', data.token);
-        login(data.user, data.token);
+        loginWithToken(data.user, data.token);
         onClose();
       } else {
         setError(data.message || '登录失败');

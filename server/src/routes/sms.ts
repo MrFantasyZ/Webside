@@ -135,7 +135,7 @@ router.post('/login',
       
       if (!user) {
         // 如果用户不存在，创建新用户
-        const username = `user_${phone.slice(-4)}_${Date.now()}`;
+        const username = `用户${Math.floor(100000 + Math.random() * 900000)}`;
         user = new User({
           username,
           phone,

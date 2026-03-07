@@ -77,6 +77,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 interface AuthContextType extends AuthState {
   login: (username: string, password: string) => Promise<void>;
+  loginWithToken: (user: User, token: string) => void;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
@@ -152,6 +153,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const loginWithToken = (user: User, token: string) => {
+    localStorage.setItem('token', token);
+    dispatch({ type: 'LOGIN_SUCCESS', payload: { user, token } });
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     dispatch({ type: 'LOGOUT' });
@@ -181,6 +187,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value: AuthContextType = {
     ...state,
     login,
+    loginWithToken,
     register,
     logout,
     updateProfile,
