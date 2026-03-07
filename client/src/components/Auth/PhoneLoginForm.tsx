@@ -33,7 +33,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onClose, onBackToLogin 
     setError('');
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/sms/send-code`, {
+      const response = await fetch(`/api/sms/send-code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,7 +93,7 @@ const PhoneLoginForm: React.FC<PhoneLoginFormProps> = ({ onClose, onBackToLogin 
     setError('');
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/sms/login`, {
+      const response = await fetch(`/api/sms/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
