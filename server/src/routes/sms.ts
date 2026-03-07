@@ -4,7 +4,7 @@ import { body, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import SmsCode from '../models/SmsCode';
-import { generateSmsCode, sendSmsCode } from '../services/smsService';
+import { sendSmsCode } from '../services/smsService';
 
 const router = express.Router();
 
@@ -55,27 +55,20 @@ router.post('/send-code',
       // 删除该手机号之前未使用的验证码
       await SmsCode.deleteMany({ phone, verified: false });
 
-      // 生成新验证码
-      const code = generateSmsCode();
+      // 调用阿里云发送短信，验证码由阿里云生成并返回
+      const smsResult = await sendSmsCode(phone);
 
-      // 保存验证码到数据库
+      if (!smsResult.success || !smsResult.code) {
+        return res.status(500).json({ message: smsResult.message });
+      }
+
+      // 将阿里云返回的验证码保存到数据库用于核验
       const smsCode = new SmsCode({
         phone,
-        code,
+        code: smsResult.code,
         expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5分钟过期
       });
       await smsCode.save();
-
-      // 发送短信
-      const smsResult = await sendSmsCode(phone, code);
-
-      if (!smsResult.success) {
-        // 发送失败，删除验证码记录
-        await SmsCode.deleteOne({ _id: smsCode._id });
-        return res.status(500).json({
-          message: smsResult.message
-        });
-      }
 
       res.json({
         message: '验证码已发送，请注意查收',
