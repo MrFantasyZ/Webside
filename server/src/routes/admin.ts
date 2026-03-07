@@ -623,4 +623,71 @@ router.get('/user-purchase-ranking', protect, requireSuperAdmin, [
   }
 });
 
+// 查询待支付订单（管理员用于手动确认）
+router.get('/pending-orders', protect, requireSuperAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const purchases = await Purchase.find({ paymentStatus: 'pending' })
+      .populate('videoId', 'title price')
+      .populate('userId', 'username email')
+      .sort({ purchaseTime: -1 })
+      .limit(50);
+
+    const grouped: Record<string, any> = {};
+    for (const p of purchases) {
+      const oid = p.orderId || (p._id as any).toString();
+      if (!grouped[oid]) {
+        grouped[oid] = {
+          orderId: oid,
+          user: p.userId,
+          paymentMethod: p.paymentMethod,
+          totalAmount: 0,
+          items: [],
+          createdAt: p.purchaseTime
+        };
+      }
+      grouped[oid].totalAmount += p.amount;
+      grouped[oid].items.push({ video: p.videoId, amount: p.amount });
+    }
+
+    res.json({ orders: Object.values(grouped) });
+  } catch (error: any) {
+    res.status(500).json({ message: '服务器错误' });
+  }
+});
+
+// 手动确认订单已支付（管理员在核实微信/支付宝收款后使用）
+router.post('/confirm-payment', protect, requireSuperAdmin, [
+  body('orderId').notEmpty().withMessage('orderId is required')
+], async (req: AuthRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: 'Validation failed', errors: errors.array() });
+    }
+
+    const { orderId } = req.body;
+    const Cart = (await import('../models/Cart')).default;
+
+    const purchases = await Purchase.find({ orderId, paymentStatus: 'pending' });
+    if (purchases.length === 0) {
+      return res.status(404).json({ message: '未找到待支付订单' });
+    }
+
+    await Purchase.updateMany(
+      { orderId, paymentStatus: 'pending' },
+      { paymentStatus: 'completed', transactionId: `MANUAL_${Date.now()}`,
+        downloadExpiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000) }
+    );
+
+    const userId = purchases[0].userId;
+    await Cart.findOneAndUpdate({ userId }, { items: [] });
+
+    console.log(`Admin manually confirmed order: ${orderId}`);
+    res.json({ message: '订单已手动确认', orderId, updated: purchases.length });
+
+  } catch (error: any) {
+    res.status(500).json({ message: '服务器错误' });
+  }
+});
+
 export default router;

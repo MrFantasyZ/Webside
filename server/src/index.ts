@@ -14,6 +14,7 @@ import smsRoutes from './routes/sms';
 import categoriesRoutes from './routes/categories';
 import adminRoutes from './routes/admin';
 import paymentRoutes from './routes/payments';
+import inviteRoutes from './routes/invite';
 import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
 import { vipAuthMiddleware } from './middleware/vipAuth';
@@ -96,6 +97,7 @@ app.use('/api/sms', smsRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/invite', inviteRoutes);
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({ message: 'Server is running', timestamp: new Date().toISOString() });

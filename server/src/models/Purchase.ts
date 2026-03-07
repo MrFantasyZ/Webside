@@ -10,9 +10,12 @@ export interface IPurchase extends Document {
   downloadCount: number;
   maxDownloads: number;
   paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
-  paymentMethod: 'alipay' | 'wechat' | 'qq' | 'other';
+  paymentMethod: 'alipay' | 'wechat' | 'qq' | 'other' | 'free';
   transactionId?: string;
   amount: number;
+  usedFreeCoupon: boolean;
+  luckyCoinsUsed: number;
+  commissionAwarded: boolean;
 }
 
 const PurchaseSchema: Schema = new Schema({
@@ -53,8 +56,20 @@ const PurchaseSchema: Schema = new Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['alipay', 'wechat', 'qq', 'other'],
+    enum: ['alipay', 'wechat', 'qq', 'other', 'free'],
     required: true
+  },
+  usedFreeCoupon: {
+    type: Boolean,
+    default: false
+  },
+  luckyCoinsUsed: {
+    type: Number,
+    default: 0
+  },
+  commissionAwarded: {
+    type: Boolean,
+    default: false
   },
   orderId: {
     type: String,

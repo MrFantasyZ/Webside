@@ -32,7 +32,7 @@ router.post('/register', [
       });
     }
 
-    const { username, password, email, phone } = req.body;
+    const { username, password, email, phone, inviteCode } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -44,9 +44,18 @@ router.post('/register', [
     });
 
     if (existingUser) {
-      return res.status(400).json({ 
-        message: '用户名、邮箱或手机号已被使用' 
+      return res.status(400).json({
+        message: '用户名、邮箱或手机号已被使用'
       });
+    }
+
+    // Validate invite code if provided
+    let inviter = null;
+    if (inviteCode) {
+      inviter = await User.findOne({ inviteCode: inviteCode.trim().toUpperCase() });
+      if (!inviter) {
+        return res.status(400).json({ message: '邀请码无效' });
+      }
     }
 
     // Create user
@@ -54,7 +63,8 @@ router.post('/register', [
       username,
       password,
       email,
-      phone
+      phone,
+      ...(inviter && { invitedBy: inviter._id, freeCoupons: 1 })
     });
 
     const token = generateToken(String(user._id));
@@ -72,7 +82,10 @@ router.post('/register', [
         username: user.username,
         email: user.email,
         phone: user.phone,
-        role: user.role
+        role: user.role,
+        luckyCoins: user.luckyCoins,
+        freeCoupons: user.freeCoupons,
+        createdAt: user.createdAt
       }
     });
 
@@ -149,7 +162,10 @@ router.get('/me', protect, async (req: AuthRequest, res: Response) => {
         email: req.user!.email,
         phone: req.user!.phone,
         role: req.user!.role,
-        createdAt: req.user!.createdAt
+        createdAt: req.user!.createdAt,
+        inviteCode: req.user!.inviteCode,
+        luckyCoins: req.user!.luckyCoins,
+        freeCoupons: req.user!.freeCoupons
       }
     });
   } catch (error: any) {

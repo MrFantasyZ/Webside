@@ -21,7 +21,23 @@
       "Bash(ffmpeg:*)",
       "Bash(\"C:\\\\ProgramData\\\\anaconda3\\\\python.exe\" extract_frames.py)",
       "Bash(git remote:*)",
-      "Bash(git remote add:*)"
+      "Bash(git remote add:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm start)",
+      "Bash(sudo cp:*)",
+      "Bash(sudo nginx:*)",
+      "Bash(mongosh:*)",
+      "Bash(mongo ai-video-store:*)",
+      "Bash(npm run update-prices:*)",
+      "Bash(scp:*)",
+      "Bash(tar:*)",
+      "Bash(cd:*)",
+      "Bash(7z:*)",
+      "WebFetch(domain:pay.mymzf.com)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(nginx -T)",
+      "Bash(npm install @alicloud/dypnsapi20170525 @alicloud/openapi-client)"
     ]
   }
 }

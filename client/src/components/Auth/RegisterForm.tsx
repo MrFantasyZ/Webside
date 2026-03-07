@@ -10,6 +10,7 @@ interface RegisterFormData {
   confirmPassword: string;
   email?: string;
   phone?: string;
+  inviteCode?: string;
 }
 
 interface RegisterFormProps {
@@ -39,6 +40,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onClose }) => {
         password: data.password,
         ...(data.email && { email: data.email }),
         ...(data.phone && { phone: data.phone }),
+        ...(data.inviteCode && { inviteCode: data.inviteCode }),
       };
       
       await registerUser(registerData);
@@ -183,6 +185,21 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onClose }) => {
         {errors.phone && (
           <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
         )}
+      </div>
+
+      {/* Invite Code */}
+      <div>
+        <label htmlFor="inviteCode" className="block text-sm font-medium text-gray-700 mb-1">
+          邀请码 <span className="text-gray-400">(可选，填写后获得一张免费购买券)</span>
+        </label>
+        <input
+          type="text"
+          id="inviteCode"
+          {...register('inviteCode')}
+          className="input-field"
+          placeholder="请输入6位邀请码"
+          maxLength={6}
+        />
       </div>
 
       {/* Terms */}

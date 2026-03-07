@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import Purchase from '../models/Purchase';
 import Cart from '../models/Cart';
 import { verifyNotification, queryGopayOrderStatus } from '../services/gopayService';
+import { awardCommission } from '../utils/commission';
 
 const router = express.Router();
 
@@ -50,6 +51,13 @@ async function handleNotify(req: Request, res: Response) {
     // 清空该用户的购物车
     const userId = purchases[0].userId;
     await Cart.findOneAndUpdate({ userId }, { items: [] });
+
+    // 发放邀请佣金（非免费劵购买）
+    for (const p of purchases) {
+      if (!p.usedFreeCoupon) {
+        await awardCommission(p.userId.toString(), p.videoId.toString(), p._id.toString());
+      }
+    }
 
     console.log(`GoPay notify: order ${out_trade_no} completed, ${purchases.length} purchases updated`);
 
@@ -103,6 +111,15 @@ router.get('/status/:orderId', async (req: Request, res: Response) => {
       );
       const userId = purchases[0].userId;
       await Cart.findOneAndUpdate({ userId }, { items: [] });
+
+      // 发放邀请佣金
+      const updatedPurchases = await Purchase.find({ orderId });
+      for (const p of updatedPurchases) {
+        if (!p.usedFreeCoupon) {
+          await awardCommission(p.userId.toString(), p.videoId.toString(), p._id.toString());
+        }
+      }
+
       console.log(`GoPay poll: order ${orderId} confirmed paid via API query`);
       return res.json({ orderId, status: 'completed', purchases: purchases.length });
     }

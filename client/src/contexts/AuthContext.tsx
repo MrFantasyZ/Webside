@@ -8,6 +8,9 @@ interface User {
   phone?: string;
   role: 'user' | 'admin' | 'superadmin';
   createdAt: string;
+  inviteCode?: string;
+  luckyCoins?: number;
+  freeCoupons?: number;
 }
 
 interface AuthState {
@@ -81,6 +84,7 @@ interface AuthContextType extends AuthState {
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  refreshUser: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (token: string, email: string, newPassword: string) => Promise<void>;
   isAdmin: boolean;
@@ -172,6 +176,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const { user } = await authAPI.getProfile();
+      dispatch({ type: 'UPDATE_USER', payload: user });
+    } catch (error) {
+      // ignore
+    }
+  };
+
   const forgotPassword = async (email: string) => {
     await authAPI.forgotPassword(email);
   };
@@ -191,6 +204,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     register,
     logout,
     updateProfile,
+    refreshUser,
     forgotPassword,
     resetPassword,
     isAdmin,

@@ -9,6 +9,7 @@ import PurchaseHistoryPage from './pages/PurchaseHistoryPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminRoute from './components/Auth/AdminRoute';
+import InviteButton from './components/InviteButton';
 import VideoUploadPage from './pages/Admin/VideoUploadPage';
 import AnalyticsPage from './pages/Admin/AnalyticsPage';
 import VideoManagePage from './pages/Admin/VideoManagePage';
@@ -16,6 +17,7 @@ import VideoManagePage from './pages/Admin/VideoManagePage';
 function App() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <InviteButton />
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />

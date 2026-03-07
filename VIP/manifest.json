@@ -5,7 +5,8 @@
   "description": "奇幻世界高级会员插件 - 解锁高清视频和专属内容",
   "permissions": [
     "storage",
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
     "http://qihuanshijie.xyz/*",
@@ -14,22 +15,13 @@
     "https://www.qihuanshijie.xyz/*",
     "http://176.97.71.149/*",
     "http://localhost:5000/*",
-    "http://localhost:3000/*"
+    "http://localhost:3000/*",
+    "http://localhost:8081/*"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icon16.png",
-      "48": "icon48.png",
-      "128": "icon128.png"
-    }
-  },
-  "icons": {
-    "16": "icon16.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
+    "default_popup": "popup.html"
   }
 }

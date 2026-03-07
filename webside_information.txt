@@ -1,2 +1,8 @@
 域名： qihuanshijie.xyz
 
+密钥：578e43300345d8e6866902bfa76657c54535f46b9b2aa51a43205218fc8f1183
+
+域名服务器：
+mario.ns.cloudflare.com
+teresa.ns.cloudflare.com
+-------------------------------------------------

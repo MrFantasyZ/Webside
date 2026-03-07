@@ -3,95 +3,154 @@ import { body, validationResult } from 'express-validator';
 import Purchase from '../models/Purchase';
 import Video from '../models/Video';
 import Cart from '../models/Cart';
+import User from '../models/User';
 import { protect, AuthRequest } from '../middleware/auth';
 import { createPaymentUrl } from '../services/gopayService';
+import { awardCommission } from '../utils/commission';
 
 const router = express.Router();
 
 // Create order from cart
 router.post('/create-order', protect, [
-  body('paymentMethod').isIn(['alipay', 'wechat', 'qq']).withMessage('Invalid payment method')
+  body('paymentMethod').isIn(['alipay', 'wechat', 'qq', 'free']).withMessage('Invalid payment method')
 ], async (req: AuthRequest, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        message: 'Validation failed', 
-        errors: errors.array() 
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: errors.array()
       });
     }
 
-    const { paymentMethod } = req.body;
+    const { paymentMethod, useFreeCoupon, luckyCoinsAmount } = req.body;
     const userId = req.user!._id;
+    const userRecord = await User.findById(userId);
+    if (!userRecord) throw new Error('用户不存在');
 
-    try {
-      // Get user's cart
-      const cart = await Cart.findOne({ userId }).populate('items.videoId');
-      if (!cart || cart.items.length === 0) {
-        throw new Error('购物车为空');
-      }
+    // Get user's cart
+    const cart = await Cart.findOne({ userId }).populate('items.videoId');
+    if (!cart || cart.items.length === 0) throw new Error('购物车为空');
 
-      // Check if user already owns any videos in cart
-      const videoIds = cart.items.map(item => item.videoId._id);
-      const existingPurchases = await Purchase.find({
-        userId,
-        videoId: { $in: videoIds },
-        paymentStatus: 'completed'
-      }).distinct('videoId');
+    const videoIds = cart.items.map(item => item.videoId._id);
+    const existingPurchases = await Purchase.find({
+      userId,
+      videoId: { $in: videoIds },
+      paymentStatus: 'completed'
+    }).distinct('videoId');
 
-      if (existingPurchases.length > 0) {
-        throw new Error('购物车中包含已拥有的视频');
-      }
+    if (existingPurchases.length > 0) throw new Error('购物车中包含已拥有的视频');
 
-      // Calculate total amount
-      const totalAmount = cart.items.reduce((sum, item: any) => 
-        sum + (item.videoId?.price || 0), 0
-      );
+    // Validate free coupon usage
+    if (useFreeCoupon) {
+      if (userRecord.freeCoupons < 1) throw new Error('没有可用的免费购买券');
+      if (cart.items.length !== 1) throw new Error('免费购买券只能用于购买单个视频');
+    }
 
-      // 生成订单ID
-      const orderId = `ORDER_${Date.now()}_${userId}`;
+    // Calculate totals
+    const totalAmount = cart.items.reduce((sum, item: any) => sum + (item.videoId?.price || 0), 0);
+    const coinsToUse = Math.min(Math.max(0, luckyCoinsAmount || 0), userRecord.luckyCoins, totalAmount);
+    const couponDiscount = useFreeCoupon ? totalAmount : 0;
+    const finalAmount = Math.max(0, totalAmount - couponDiscount - coinsToUse);
 
-      // 创建购买记录（含 orderId）
+    if (finalAmount === 0 && paymentMethod !== 'free') throw new Error('免费订单请使用 free 支付方式');
+
+    const orderId = `ORDER_${Date.now()}_${userId}`;
+    const now = new Date();
+
+    if (finalAmount === 0) {
+      // 免费订单：直接标记为完成
       const purchaseDocs = cart.items.map(item => ({
         userId,
         videoId: item.videoId._id,
         orderId,
-        paymentStatus: 'pending' as const,
-        paymentMethod,
-        amount: (item.videoId as any).price,
-        purchaseTime: new Date(),
-        downloadExpiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000)
+        paymentStatus: 'completed' as const,
+        paymentMethod: 'free' as const,
+        amount: useFreeCoupon ? 0 : (item.videoId as any).price - coinsToUse,
+        usedFreeCoupon: !!useFreeCoupon,
+        luckyCoinsUsed: coinsToUse,
+        commissionAwarded: false,
+        purchaseTime: now,
+        downloadExpiresAt: new Date(now.getTime() + 48 * 60 * 60 * 1000)
       }));
 
       const createdPurchases = await Purchase.insertMany(purchaseDocs);
 
-      // 生成 GoPay 支付链接
-      const serverUrl = process.env.SERVER_URL || 'https://qihuanshijie.xyz';
-      const frontendUrl = process.env.FRONTEND_URL || 'https://qihuanshijie.xyz';
-      const paymentUrl = createPaymentUrl({
-        orderId,
-        amount: totalAmount,
-        paymentMethod,
-        notifyUrl: `${serverUrl}/api/payments/notify`,
-        returnUrl: `${frontendUrl}/payment/result?orderId=${orderId}`,
-        productName: '奇幻世界视频素材'
-      });
+      // 扣除资源
+      const updateFields: any = {};
+      if (useFreeCoupon) updateFields.$inc = { freeCoupons: -1 };
+      if (coinsToUse > 0) {
+        if (updateFields.$inc) updateFields.$inc.luckyCoins = -coinsToUse;
+        else updateFields.$inc = { luckyCoins: -coinsToUse };
+      }
+      if (Object.keys(updateFields).length > 0) {
+        await User.findByIdAndUpdate(userId, updateFields);
+      }
 
-      res.json({
+      // 清空购物车
+      await Cart.findOneAndUpdate({ userId }, { items: [] });
+
+      // 发放佣金（非免费劵订单才发放）
+      if (!useFreeCoupon) {
+        for (const p of createdPurchases) {
+          await awardCommission(userId.toString(), p.videoId.toString(), p._id.toString());
+        }
+      }
+
+      return res.json({
         message: '订单创建成功',
         orderId,
-        paymentUrl,
-        totalAmount,
+        paymentUrl: null,
+        freeOrder: true,
+        totalAmount: finalAmount,
         purchases: createdPurchases.map(p => p._id)
       });
-
-    } catch (error) {
-      throw error;
     }
+
+    // 需要付款的订单
+    const purchaseDocs = cart.items.map(item => ({
+      userId,
+      videoId: item.videoId._id,
+      orderId,
+      paymentStatus: 'pending' as const,
+      paymentMethod,
+      amount: (item.videoId as any).price,
+      usedFreeCoupon: false,
+      luckyCoinsUsed: coinsToUse,
+      commissionAwarded: false,
+      purchaseTime: now,
+      downloadExpiresAt: new Date(now.getTime() + 48 * 60 * 60 * 1000)
+    }));
+
+    await Purchase.insertMany(purchaseDocs);
+
+    // 预扣幸运币（防止重复使用）
+    if (coinsToUse > 0) {
+      await User.findByIdAndUpdate(userId, { $inc: { luckyCoins: -coinsToUse } });
+    }
+
+    const serverUrl = process.env.SERVER_URL || 'https://qihuanshijie.xyz';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://qihuanshijie.xyz';
+    const paymentUrl = createPaymentUrl({
+      orderId,
+      amount: finalAmount,
+      paymentMethod,
+      notifyUrl: `${serverUrl}/api/payments/notify`,
+      returnUrl: `${frontendUrl}/payment/result?orderId=${orderId}`,
+      productName: '奇幻世界视频素材'
+    });
+
+    res.json({
+      message: '订单创建成功',
+      orderId,
+      paymentUrl,
+      totalAmount: finalAmount,
+      purchases: purchaseDocs.map((_, i) => i)
+    });
 
   } catch (error: any) {
     console.error('Create order error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: error.message || '服务器错误',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });

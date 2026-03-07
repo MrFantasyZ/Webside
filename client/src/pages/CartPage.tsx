@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Trash2, ArrowRight } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import { purchasesAPI } from '../services/api';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 import PaymentModal from '../components/Payment/PaymentModal';
@@ -9,11 +10,14 @@ import toast from 'react-hot-toast';
 
 const CartPage: React.FC = () => {
   const { items, total, count, removeFromCart, clearCart, isLoading } = useCart();
+  const { user, refreshUser } = useAuth();
   const [isCreatingOrder, setIsCreatingOrder] = React.useState(false);
   const [showPaymentModal, setShowPaymentModal] = React.useState(false);
   const [currentPaymentMethod, setCurrentPaymentMethod] = React.useState<'alipay' | 'wechat' | 'qq' | null>(null);
   const [currentOrderId, setCurrentOrderId] = React.useState<string>('');
   const [currentPaymentUrl, setCurrentPaymentUrl] = React.useState<string>('');
+  const [useFreeCoupon, setUseFreeCoupon] = React.useState(false);
+  const [luckyCoinsInput, setLuckyCoinsInput] = React.useState(0);
 
   const handleRemoveItem = async (videoId: string) => {
     try {
@@ -33,17 +37,32 @@ const CartPage: React.FC = () => {
     }
   };
 
+  const couponDiscount = useFreeCoupon && count === 1 ? total : 0;
+  const coinsDiscount = Math.min(luckyCoinsInput, user?.luckyCoins ?? 0, total - couponDiscount);
+  const finalTotal = Math.max(0, total - couponDiscount - coinsDiscount);
+
   const handleCheckout = async (paymentMethod: 'alipay' | 'wechat' | 'qq') => {
+    const effectiveMethod = finalTotal === 0 ? 'free' : paymentMethod;
     setIsCreatingOrder(true);
     try {
-      const { paymentUrl, orderId } = await purchasesAPI.createOrder(paymentMethod);
-      
+      const result = await purchasesAPI.createOrder({
+        paymentMethod: effectiveMethod,
+        useFreeCoupon: useFreeCoupon && count === 1,
+        luckyCoinsAmount: coinsDiscount
+      });
+
+      if (result.freeOrder) {
+        toast.success('购买成功！');
+        await refreshUser();
+        clearCart();
+        return;
+      }
+
       setCurrentPaymentMethod(paymentMethod);
-      setCurrentOrderId(orderId);
-      setCurrentPaymentUrl(paymentUrl);
+      setCurrentOrderId(result.orderId);
+      setCurrentPaymentUrl(result.paymentUrl);
       setShowPaymentModal(true);
       toast.success('订单创建成功！');
-      
     } catch (error: any) {
       toast.error(error.response?.data?.message || '创建订单失败');
     } finally {
@@ -157,35 +176,92 @@ const CartPage: React.FC = () => {
 
         {/* Cart Summary */}
         <div className="bg-gray-50 p-6 rounded-b-lg">
+          {/* Free coupon */}
+          {(user?.freeCoupons ?? 0) > 0 && count === 1 && (
+            <div className="flex items-center justify-between mb-3 p-3 bg-green-50 rounded-lg border border-green-200">
+              <div>
+                <div className="text-sm font-medium text-green-800">使用免费购买券</div>
+                <div className="text-xs text-green-600">剩余 {user?.freeCoupons} 张，可免费获得此视频</div>
+              </div>
+              <input
+                type="checkbox"
+                checked={useFreeCoupon}
+                onChange={e => setUseFreeCoupon(e.target.checked)}
+                className="w-5 h-5 accent-green-600"
+              />
+            </div>
+          )}
+
+          {/* Lucky coins */}
+          {(user?.luckyCoins ?? 0) > 0 && !useFreeCoupon && (
+            <div className="mb-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium text-yellow-800">使用幸运币</div>
+                <div className="text-xs text-yellow-600">余额 {(user?.luckyCoins ?? 0).toFixed(2)} 枚</div>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={Math.min(user?.luckyCoins ?? 0, total)}
+                step={0.01}
+                value={luckyCoinsInput}
+                onChange={e => setLuckyCoinsInput(parseFloat(e.target.value))}
+                className="w-full accent-yellow-500"
+              />
+              <div className="flex justify-between text-xs text-yellow-700 mt-1">
+                <span>0</span>
+                <span className="font-semibold">抵扣 ¥{coinsDiscount.toFixed(2)}</span>
+                <span>{Math.min(user?.luckyCoins ?? 0, total).toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between text-lg font-semibold text-gray-900 mb-4">
-            <span>总计</span>
-            <span className="text-orange-600">¥{total.toFixed(2)}</span>
+            <span>实付</span>
+            <div className="text-right">
+              {(couponDiscount > 0 || coinsDiscount > 0) && (
+                <div className="text-sm text-gray-400 line-through">¥{total.toFixed(2)}</div>
+              )}
+              <span className="text-orange-600">¥{finalTotal.toFixed(2)}</span>
+            </div>
           </div>
 
           <div className="space-y-3">
-            <button
-              onClick={() => handleCheckout('alipay')}
-              disabled={isCreatingOrder}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isCreatingOrder ? '创建订单中...' : '支付宝支付'}
-            </button>
-            
-            <button
-              onClick={() => handleCheckout('wechat')}
-              disabled={isCreatingOrder}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isCreatingOrder ? '创建订单中...' : '微信支付'}
-            </button>
+            {finalTotal === 0 ? (
+              <button
+                onClick={() => handleCheckout('alipay')}
+                disabled={isCreatingOrder}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCreatingOrder ? '处理中...' : '免费获取'}
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => handleCheckout('alipay')}
+                  disabled={isCreatingOrder}
+                  className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCreatingOrder ? '创建订单中...' : '支付宝支付'}
+                </button>
 
-            <button
-              onClick={() => handleCheckout('qq')}
-              disabled={isCreatingOrder}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isCreatingOrder ? '创建订单中...' : 'QQ支付'}
-            </button>
+                <button
+                  onClick={() => handleCheckout('wechat')}
+                  disabled={isCreatingOrder}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCreatingOrder ? '创建订单中...' : '微信支付'}
+                </button>
+
+                <button
+                  onClick={() => handleCheckout('qq')}
+                  disabled={isCreatingOrder}
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCreatingOrder ? '创建订单中...' : 'QQ支付'}
+                </button>
+              </>
+            )}
           </div>
 
           <p className="text-xs text-gray-500 mt-4">

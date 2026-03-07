@@ -37,6 +37,7 @@ export const authAPI = {
     password: string;
     email?: string;
     phone?: string;
+    inviteCode?: string;
   }) => {
     const response = await api.post('/auth/register', data);
     return response.data;
@@ -132,8 +133,12 @@ export const cartAPI = {
 
 // Purchases API
 export const purchasesAPI = {
-  createOrder: async (paymentMethod: 'alipay' | 'wechat' | 'qq') => {
-    const response = await api.post('/purchases/create-order', { paymentMethod });
+  createOrder: async (data: {
+    paymentMethod: 'alipay' | 'wechat' | 'qq' | 'free';
+    useFreeCoupon?: boolean;
+    luckyCoinsAmount?: number;
+  }) => {
+    const response = await api.post('/purchases/create-order', data);
     return response.data;
   },
 
@@ -182,6 +187,14 @@ export const categoriesAPI = {
 
   deleteCategory: async (id: string) => {
     const response = await api.delete(`/categories/${id}`);
+    return response.data;
+  },
+};
+
+// Invite API
+export const inviteAPI = {
+  getMyCode: async () => {
+    const response = await api.get('/invite/my-code');
     return response.data;
   },
 };

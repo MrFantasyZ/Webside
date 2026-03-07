@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, CheckCircle, ExternalLink } from 'lucide-react';
 import { purchasesAPI } from '../../services/api';
 import { useCart } from '../../contexts/CartContext';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 interface PaymentModalProps {
@@ -26,6 +27,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const pollRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { clearCart } = useCart();
+  const { refreshUser } = useAuth();
 
   const stopPolling = () => {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -58,6 +60,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           stopPolling();
           toast.success('支付成功！');
           clearCart();
+          refreshUser();
         } else if (data.status === 'failed') {
           setStatus('failed');
           stopPolling();

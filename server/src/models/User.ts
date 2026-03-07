@@ -7,6 +7,10 @@ export interface IUser extends Document {
   email?: string;
   phone?: string;
   role: 'user' | 'admin' | 'superadmin';
+  inviteCode?: string;
+  luckyCoins: number;
+  freeCoupons: number;
+  invitedBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -41,6 +45,26 @@ const UserSchema: Schema = new Schema({
     type: String,
     enum: ['user', 'admin', 'superadmin'],
     default: 'user'
+  },
+  inviteCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true
+  },
+  luckyCoins: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  freeCoupons: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  invitedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }
 }, {
   timestamps: true
