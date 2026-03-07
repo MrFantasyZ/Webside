@@ -158,7 +158,9 @@ router.post('/login',
           id: user._id,
           username: user.username,
           phone: user.phone,
-          email: user.email
+          email: user.email,
+          role: user.role,
+          createdAt: user.createdAt
         }
       });
 
